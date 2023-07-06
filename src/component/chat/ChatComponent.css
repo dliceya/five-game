@@ -1,0 +1,7 @@
+.main-chat{
+    width: 400px;
+    height: 560px;
+    display: flex;
+    margin-left: 85px;
+    background-color: #eee;
+}
