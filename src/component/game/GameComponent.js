@@ -3,7 +3,6 @@ import React, {Component} from 'react'
 import FiveComponent from "../board/BoardComponent";
 import {message} from "antd";
 
-
 class GameComponent extends Component {
 
     constructor(props) {
@@ -17,7 +16,6 @@ class GameComponent extends Component {
                 idy: null,
                 whiteClick: null,
             }],
-            history:[],
             webSocket: null,
         }
     }
@@ -27,9 +25,6 @@ class GameComponent extends Component {
         if (state !== -1) {
             return
         }
-        if (this.state.history.length >= 6) {
-            this.state.history.shift();
-        }
         this.setState((preState) => ({
             whiteIsNext: !preState.whiteIsNext,
             squares: preState.squares.concat([{
@@ -37,17 +32,16 @@ class GameComponent extends Component {
                 idy: checkIdy,
                 whiteClick: preState.whiteIsNext
             }]),
-            history: [...preState.history, this.state.squares]
         }), () => this.calculateWinner(checkIdx, checkIdy))
     }
 
     back() {
-        if (this.state.history.length < 1) {
+        if (this.state.squares.length === 1) {
             return
         }
+        this.state.squares.pop();
         this.setState((preState) => ({
-            squares: preState.history.pop(),
-            history: preState.history,
+            squares: this.state.squares,
             whiteIsNext: !preState.whiteIsNext,
         }))
     }
@@ -56,8 +50,8 @@ class GameComponent extends Component {
         const self = this;
         return(
             <>
-            <button onClick={() => self.back()}>撤销</button>
-                <FiveComponent {...self.state} onClick = {function (x, y){self.handleClick(x, y)}}/>
+                <button onClick={() => self.back()}>撤销</button>
+                <FiveComponent {...self.state} onClick = {(x, y) => self.handleClick(x, y)}/>
             </>
         )
     }
@@ -166,6 +160,16 @@ class GameComponent extends Component {
             return true;
         }
         return false
+    }
+    back2() {
+        if (this.state.history.length < 1) {
+            return
+        }
+        this.setState((preState) => ({
+            squares: preState.history.pop(),
+            history: preState.history,
+            whiteIsNext: !preState.whiteIsNext,
+        }))
     }
 }
 

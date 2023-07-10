@@ -2,10 +2,6 @@ import React, {Component} from 'react'
 import './BoardComponent.css'
 
 class FiveComponent extends Component {
-    constructor(props) {
-        super(props);
-    }
-
 
     render() {
         const self = this;
