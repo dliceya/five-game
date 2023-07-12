@@ -1,8 +1,8 @@
 import React, {Component} from 'react'
 
 import FiveComponent from "../board/BoardComponent";
-import {message} from "antd";
 import {boardLength} from "../../config/GloableConfig";
+import {messageUtil} from "../../utils/Message";
 
 class GameComponent extends Component {
 
@@ -80,7 +80,7 @@ class GameComponent extends Component {
             }
         }
         if (columnCount >= 4) {
-            message.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
             return true;
         } else {
             columnCount = 0
@@ -102,7 +102,7 @@ class GameComponent extends Component {
             }
         }
         if (columnCount >= 4) {
-            message.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
             return true;
         } else {
             columnCount = 0
@@ -126,7 +126,7 @@ class GameComponent extends Component {
             }
         }
         if (columnCount >= 4) {
-            message.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
             return true;
         } else {
             columnCount = 0
@@ -149,7 +149,7 @@ class GameComponent extends Component {
             }
         }
         if (columnCount >= 4) {
-            message.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(this.state.nextBoard === -1 ? '黑棋胜' : '白棋胜')
             return true;
         }
         return false
