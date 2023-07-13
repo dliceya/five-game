@@ -1,24 +1,20 @@
-import React, {Component} from 'react'
-
 import { UserOutlined } from '@ant-design/icons';
 import { Input, Modal } from 'antd';
 
 import MainContains from "../main/MainContains";
 import {websocket_domain, websocket_path} from "../../config/GloableConfig";
 import {messageUtil} from "../../utils/Message";
+import {useImmer} from "use-immer";
 
-class ClientComponent extends Component {
+export default function ClientComponent() {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            isModalOpen: true,
-            userName: '',
-        }
-    }
+    const [state, updateState] = useImmer({
+        isModalOpen: true,
+        userName: '',
+    })
 
-    initCollection() {
-        const websocket = new WebSocket(websocket_domain + websocket_path + this.state.userName)
+    function initCollection() {
+        const websocket = new WebSocket(websocket_domain + websocket_path + state.userName)
         websocket.onmessage = (msg) => {
             const messageBody = JSON.parse(msg.data)
 
@@ -32,61 +28,52 @@ class ClientComponent extends Component {
                             break;
                         case "NameRepeat":
                             messageUtil.error(messageBody.message)
-                            this.setState(() => ({
-                                isModalOpen: true,
-                            }))
+                            updateState(draft => {
+                                draft.isModalOpen = true
+                            })
                             break;
                         default:
                     }
                     break;
                 default:
 
-
-
             }
 
         };
-
     }
 
-    handleServerMessage(msg) {
+    function handleServerMessage(msg) {
         console.log(msg)
     }
 
-    handleOk() {
+    function handleOk() {
 
-        if (this.state.userName === '') {
+        if (state.userName === '') {
             messageUtil.info('请输入用户名加入游戏')
             return false;
         }
 
-        this.setState((preState) => ({
-            isModalOpen: !preState.isModalOpen,
-        }))
-        this.initCollection()
+        updateState(draft => {
+            draft.isModalOpen = false;
+        })
+        initCollection()
     }
 
-    handleCancel() {
+    function handleCancel() {
         messageUtil.success('请输入用户名加入游戏')
     }
 
-    render(){
-        const self = this;
-        return(
-            <>
-                <Modal title="我的信息" open={self.state.isModalOpen} onOk={() => self.handleOk()} onCancel={self.handleCancel}>
-                    <Input
-                        placeholder="请输入用户名"
-                        prefix={<UserOutlined className="site-form-item-icon" />}
-                        onChange={(e) => self.setState(() => ({userName: e.target.value}))}
-                        allowClear
-                    />
-                </Modal>
-                <MainContains />
-            </>
-        )
-    }
+    return(
+        <>
+            <Modal title="我的信息" open={state.isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+                <Input
+                    placeholder = "请输入用户名"
+                    prefix = {<UserOutlined className="site-form-item-icon" />}
+                    onChange = {(e) => updateState(draft => {draft.userName = e.target.value})}
+                    allowClear
+                />
+            </Modal>
+            <MainContains />
+        </>
+    )
 }
-
-
-export default ClientComponent
