@@ -1,7 +1,6 @@
 .main{
     display: flex;
-    margin-left: 50px;
-    justify-content: center;
+    justify-content: left;
     align-items: center;
 }
 .main-cell{

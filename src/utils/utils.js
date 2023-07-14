@@ -12,3 +12,12 @@ export const messageUtil = {
     },
 
 }
+
+export const qqUtil = {
+    getAvatarByQQNumber : function (qqNumber) {
+        if (!qqNumber) {
+            qqNumber = '1767953212'
+        }
+        return 'https://q1.qlogo.cn/g?b=qq&nk='+ qqNumber + '&s=100'
+    }
+}

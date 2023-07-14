@@ -1,6 +1,6 @@
 import FiveComponent from "../board/BoardComponent";
 import {boardLength} from "../../config/GloableConfig";
-import {messageUtil} from "../../utils/Message";
+import {messageUtil} from "../../utils/utils";
 import {useImmer} from "use-immer";
 import {produce} from 'immer';
 
@@ -16,6 +16,13 @@ export default function GameComponent() {
             idy: null,
         }],
     })
+
+    return(
+        <>
+            <button onClick={() => back()}>撤销</button>
+            <FiveComponent arr={state.arr} chessBoard={state.chessBoard} onClick = {(x, y) => handleClick(x, y)}/>
+        </>
+    )
 
     function handleClick(checkIdx, checkIdy) {
 
@@ -44,13 +51,6 @@ export default function GameComponent() {
             draft.nextBoard = -state.nextBoard;
         })
     }
-
-    return(
-        <>
-            <button onClick={() => back()}>撤销</button>
-            <FiveComponent arr={state.arr} chessBoard={state.chessBoard} onClick = {(x, y) => handleClick(x, y)}/>
-        </>
-    )
 
     function calculateWinner(checkIdx, checkIdy) {
         let columnCount = 0;
