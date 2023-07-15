@@ -43,25 +43,19 @@ export default function ClientComponent() {
             })
         })
     }
-    const handelRequest = (messageBody) => {
-        let secondsToGo = 5;
 
+    const handelRequest = (messageBody) => {
+
+        modal.mask = false
         const instance = modal.success({
             title: '对战邀请',
             content: `收到来自` + messageBody.sourceUser + '的对战邀请',
         });
 
-        const timer = setInterval(() => {
-            secondsToGo -= 1;
-            instance.update({
-                content: `This modal will be destroyed after ${secondsToGo} second.`,
-            });
-        }, 1000);
 
         setTimeout(() => {
-            clearInterval(timer);
             instance.destroy();
-        }, secondsToGo * 1000);
+        }, 6000);
     };
 
 
@@ -143,8 +137,8 @@ export default function ClientComponent() {
                         />
                     </Col>
                 </Row>
-        </Modal>
-            <MainContains userList={state.userList} handelRequestFight = {(targetUser) => requestFight(targetUser)}/>
+            </Modal>
+            <MainContains userList={state.userList} handelRequestFight={(targetUser) => requestFight(targetUser)}/>
         </>
     )
 }

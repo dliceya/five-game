@@ -1,11 +1,7 @@
 .main{
     display: flex;
-    justify-content: left;
-    align-items: center;
 }
 .main-cell{
-    padding-left: 0;
-    position: relative;
 }
 .main-cell-single{
     border: 1px solid #CCD;
