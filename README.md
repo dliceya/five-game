@@ -68,3 +68,42 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+### 1、防止恶意发送验证码
+
+> 思路: 对于登录业务来说，首先验证手机号合法性，其次对单个用户的验证码频率进行限制：每60秒只能发送一次验证码短信（更严格的可以限制没手机号每天的验证码发送次数）
+
+~~~java 
+	public Result sendVerificationCode() {
+		var userInfo = userRepository.getByMobile(mobile)
+		if (userInfo == null) {
+			error "该手机号不存在";
+		}
+		
+		var send = redisServer.get(CodeLimitPrefix + mobile);
+		if (send != null) {
+			error "每分钟仅能发送一次验证码，请稍后重试";
+		}
+		
+		var sendCount = redisServer.get(DayCodeLimitPrefix + mobile + DateUtil.getDay());
+		if (sendCount >= MaxSendCount) {
+			error "验证码每天最多发送" + MaxSendCount + "，请勿频繁发送";
+		}
+		
+
+		
+		String verificationCode = genCode();
+		smsService.sendVerificationCode(mobile, verificationCode);
+		redisServer.save(mobile, sendCount + 1, 1 * 60)
+		redisServer.save(DayCodeLimitPrefix + mobile + DateUtil.getDay(), (preCount) -> preCount + 1, 24 * 60 * 60)
+		.....
+		
+	}
+~~~
+
+### 2、大数据量报表导出
+
+> 思路：首先优化数据查询接口效率，确保没有明显的Sql问题。然后两种思路：异步和ForkJoin，异步实现简单，在我看来也是比较好的办法
+
+

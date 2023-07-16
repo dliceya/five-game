@@ -1,4 +1,4 @@
-import './BoardComponent.css'
+import './BoardComponentTest.scss'
 
 export default function FiveComponent({arr, chessBoard, onClick}) {
 
@@ -6,7 +6,8 @@ export default function FiveComponent({arr, chessBoard, onClick}) {
         <div className='main'>
             {
                 arr.map((item, boardIdx) => {
-                    return (<div className='main-cell' key={boardIdx}>
+                    return (
+                        <div className='main-cell' key={boardIdx}>
                         {
                             arr.map((item, boardIdy) => {
                                 let className_cellSingle = boardIdx === 0 ? 'main-cell-single-white-x' : boardIdy ===0 ? 'main-cell-single-white-y' : 'main-cell-single';

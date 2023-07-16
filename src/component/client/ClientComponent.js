@@ -35,10 +35,11 @@ export default function ClientComponent() {
 
     function initCollection() {
 
+        const socket = new WebSocket(websocket_domain + websocket_path + user.userName + "Number" + user.qqNumber)
+        socket.onmessage = (msg) => handleServerMessage(msg)
+
         updateState(draft => {
             produce(draft, () => {
-                const socket = new WebSocket(websocket_domain + websocket_path + user.userName + "Number" + user.qqNumber)
-                socket.onmessage = (msg) => handleServerMessage(msg)
                 draft.websocket = socket
             })
         })
@@ -51,7 +52,6 @@ export default function ClientComponent() {
             title: '对战邀请',
             content: `收到来自` + messageBody.sourceUser + '的对战邀请',
         });
-
 
         setTimeout(() => {
             instance.destroy();
