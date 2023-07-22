@@ -1,5 +1,5 @@
 export const server_domain = "http://localhost:8080";
-export const websocket_domain = "ws://192.168.2.208:8080"
+export const websocket_domain = "ws://120.55.90.156"
 
 export const websocket_path = "/websocket/";
 

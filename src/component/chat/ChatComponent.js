@@ -3,16 +3,13 @@ import React from 'react'
 import './ChatComponent.css'
 import {List, Avatar, Button, Tooltip} from "antd";
 import {qqUtil} from "../../utils/utils";
-import {useContext} from "react";
 
-import {currentUserContext} from "../client/ClientComponent";
-
-export default function ChatComponent({inGame, userList, handelRequestFight}) {
-
-    const context = useContext(currentUserContext)
+export default function ChatComponent({currUser, inGame, userList, handelRequestFight}) {
 
     return (
         <div className='main-chat'>
+            <Button>人机对战</Button>
+            <Button>自己下</Button>
             <List
                 bordered={true}
                 dataSource={userList}
@@ -25,9 +22,9 @@ export default function ChatComponent({inGame, userList, handelRequestFight}) {
                                     <div>{item.userName.substr(0, 6)}</div>
                                 </Tooltip>
                                 }
-                                description=""
+                                description={currUser === item.userName ? '我自己'.concat('(').concat(item.status).concat(')')  : item.status}
                             />
-                            <Button type="dashed" disabled={inGame} onClick={() => handelRequestFight(item.userName)}>邀请对战</Button>
+                            <Button type="dashed" disabled={inGame || item.status !== '空闲中' || currUser === item.userName} onClick={() => handelRequestFight(item.userName)}>邀请对战</Button>
                         </List.Item>
                     )
                 }}

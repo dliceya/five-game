@@ -5,7 +5,7 @@ export default function GameComponent({gameInfo, handleLocalPlay}) {
     return(
         <>
             {/*<button onClick={() => back()}>撤销</button>*/}
-            <FiveComponent arr={gameInfo.arr} chessBoard={gameInfo.chessBoard} onClick = {(idx, idy) => handleLocalPlay(idx, idy)}/>
+            <FiveComponent gameInfo={gameInfo} onClick = {(idx, idy) => handleLocalPlay(idx, idy)}/>
         </>
     )
 

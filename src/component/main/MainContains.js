@@ -6,7 +6,8 @@ import GameComponent from "../game/GameComponent";
 import {Col, Row} from "antd";
 
 
-export default function MainContains({myBoard, gameInfo,handleLocalPlay, inGame, userList, handelRequestFight}) {
+export default function MainContains({myBoard, gameInfo,handleLocalPlay,
+                                         currUser, inGame, userList, handelRequestFight}) {
 
     return (
         <Row className='main_back' gutter={[{xs: 8, sm: 16, md: 24, lg: 32}, {xs: 8, sm: 16, md: 24, lg: 32}]}>
@@ -14,7 +15,7 @@ export default function MainContains({myBoard, gameInfo,handleLocalPlay, inGame,
                 {<GameComponent myBoard={myBoard} gameInfo={gameInfo} handleLocalPlay={(idx, idy) => handleLocalPlay(idx, idy)}/>}
             </Col>
             <Col>
-                { <ChatComponent inGame={inGame} userList={userList} handelRequestFight={handelRequestFight}/> }
+                { <ChatComponent currUser ={currUser} inGame={inGame} userList={userList} handelRequestFight={handelRequestFight}/> }
             </Col>
         </Row>
     )

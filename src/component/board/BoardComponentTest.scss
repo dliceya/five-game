@@ -59,6 +59,17 @@ $borderBase: 29px;
   background-color: #111;
   box-shadow: 0 2px 5px 2px rgba(234, 255, 253, 1);
 }
+.main-cell-black-pre{
+  position: relative;
+  width: $borderBase - 2;
+  height: $borderBase - 2;
+  margin-right: math.div(-($borderBase - 1), 2);
+  margin-bottom: math.div(-($borderBase - 1), 2);
+  border-radius: 50%;
+  background-color: #111;
+  box-shadow: 0 2px 5px 2px rgba(234, 255, 253, 1);
+  animation: donghua 2.4s infinite;
+}
 .main-cell-white{
   position: relative;
   z-index: 11;
@@ -69,4 +80,35 @@ $borderBase: 29px;
   border-radius: 50%;
   background-color: #eee;
   box-shadow: 0 2px 5px 1px rgba(163, 235, 168, 1);
+}
+
+.main-cell-white-pre{
+  position: relative;
+  z-index: 11;
+  width: $borderBase - 2;
+  height: $borderBase - 2;
+  margin-right: math.div(-($borderBase - 1), 2);
+  margin-bottom: math.div(-($borderBase - 1), 2);
+  border-radius: 50%;
+  background-color: #eee;
+  box-shadow: 0 2px 5px 1px rgba(163, 235, 168, 1);
+  animation: donghua 2.4s infinite;
+}
+
+@keyframes donghua {
+  0% {
+    transform: scale(0.75);
+    /* 注意rgba中的a的设置 */
+    box-shadow: 0 0 0 0 rgba(204, 73, 152, 60%);
+  }
+
+  60% {
+    transform: scale(1);
+    box-shadow: 0 0 0 36px rgba(204, 73, 152, 0%);
+  }
+
+  100% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 0 rgba(204, 73, 152, 0%);
+  }
 }

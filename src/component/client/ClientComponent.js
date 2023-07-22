@@ -1,5 +1,5 @@
 import {UserOutlined, QqOutlined, ExclamationCircleFilled} from '@ant-design/icons';
-import {Input, Modal, Col, Row} from 'antd';
+import {Input, Modal, Col, Row, Spin, Progress} from 'antd';
 
 import MainContains from "../main/MainContains";
 import {boardLength, websocket_domain, websocket_path} from "../../config/GloableConfig";
@@ -23,25 +23,30 @@ export default function ClientComponent() {
     })
 
     const [state, updateState] = useImmer({
-        isModalOpen: true,
+        isUserModalOpen: true,
         userList: [],
         myBoard: -1,
         inGame: false,
         waitingAgree: false,
+        waitingAgreePercent: 100,
         gameInfo: {
             arr: Array(boardLength).fill(null),
             nextBoard: 1,
+            test: 1,
             chessBoard: Array.from(new Array(boardLength), () => new Array(boardLength).fill(0)),
             squares: [{            // 落子历史数据，存放点击过的点坐标
                 idx: null,
                 idy: null,
             }],
+            preCheckIdx: -1,
+            preCheckIdy: -1,
         }
     })
     function handleLocalPlay(checkIdx, checkIdy, isTargetPlay) {
 
         if (!isTargetPlay) {
-            if (state.myBoard !== 0 && state.myBoard !== state.gameInfo.nextBoard) {
+            let alert = 3;
+            if (state.myBoard !== 0 && alert++ % 3 ===0 && state.myBoard !== state.gameInfo.nextBoard) {
                 messageUtil.info('请等待对方落子')
                 return;
             }
@@ -51,13 +56,23 @@ export default function ClientComponent() {
             return
         }
 
+        let targetPlayBoard;
+        console.log(state.gameInfo.test)
         updateState(draft => {
-            produce(draft, () => {
-                draft.gameInfo.chessBoard[checkIdx][checkIdy] = draft.gameInfo.nextBoard;
-                draft.gameInfo.nextBoard = -draft.gameInfo.nextBoard;
-                draft.gameInfo.squares = [...draft.gameInfo.squares, {idx: checkIdx, idy: checkIdy}]
-            })
+            draft.gameInfo.chessBoard[checkIdx][checkIdy] = draft.gameInfo.nextBoard;
+            draft.gameInfo.nextBoard = -draft.gameInfo.nextBoard;
+            draft.gameInfo.squares = [...draft.gameInfo.squares, {idx: checkIdx, idy: checkIdy}];
+            draft.gameInfo.test = draft.gameInfo.test + 1;
+            draft.gameInfo.preCheckIdx = checkIdx;
+            draft.gameInfo.preCheckIdy = checkIdy;
+            targetPlayBoard = draft.gameInfo.nextBoard;
+            console.log(draft.gameInfo.nextBoard)
         })
+
+
+        if (calculateWinner(checkIdx, checkIdy, targetPlayBoard)) {
+            clearBoard(-state.myBoard, true);
+        }
 
         if (!isTargetPlay) {
             const playInfo = {
@@ -69,21 +84,20 @@ export default function ClientComponent() {
             }
             currentUserContext.socket.send(JSON.stringify(playInfo))
         }
-
-        calculateWinner(checkIdx, checkIdy)
     }
 
-    function clearBoard(){
+    function clearBoard(myBoard = 0, inGame = false){
         updateState(draft => {
-            draft.gameInfo = {
-                arr: Array(boardLength).fill(null),
-                    nextBoard: 1,
-                    chessBoard: Array.from(new Array(boardLength), () => new Array(boardLength).fill(0)),
-                    squares: [{            // 落子历史数据，存放点击过的点坐标
-                    idx: null,
-                    idy: null,
-                }],
-            }
+            draft.myBoard = myBoard;
+            draft.inGame = inGame;
+            draft.gameInfo.chessBoard = Array.from(new Array(boardLength), () => new Array(boardLength).fill(0));
+            draft.gameInfo.squares = [{
+                idx: null,
+                idy: null,
+            }];
+            draft.gameInfo.test = 1;
+            draft.gameInfo.preCheckIdx = -1;
+            draft.gameInfo.preCheckIdy = -1;
         })
     }
 
@@ -100,7 +114,7 @@ export default function ClientComponent() {
                         draft.inGame = true;
                         draft.waitingAgree = false;
                     })
-                    clearBoard()
+                    clearBoard(-1, true)
                     currentUserContext.targetUser = messageBody.sourceUser
                     messageUtil.success(messageBody.sourceUser + '已同意您的对战请求')
                 } else if (!messageBody.ifTargetAgree){
@@ -128,14 +142,14 @@ export default function ClientComponent() {
                     case "NameRepeat":
                         messageUtil.error(messageBody.message)
                         updateState(draft => {
-                            draft.isModalOpen = true
+                            draft.isUserModalOpen = true
                         })
                         break;
                     default:
                 }
                 break;
             case "AlertMessage":
-                clearBoard()
+                clearBoard(-1, false)
                 updateState(draft => {
                     draft.inGame = false;
                 })
@@ -147,7 +161,7 @@ export default function ClientComponent() {
 
     return (
         <>
-            <Modal title="我的信息（QQ号仅用于获取头像）" open={state.isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+            <Modal title="我的信息（QQ号仅用于获取头像）" open={state.isUserModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <Row gutter={[16, 16]}>
                     <Col>
                         <Input
@@ -172,14 +186,24 @@ export default function ClientComponent() {
                 </Row>
             </Modal>
 
-            <MainContains myBoard={state.myBoard}
-                          gameInfo={state.gameInfo}
-                          handleLocalPlay={(idx, idy) => handleLocalPlay(idx, idy, false)}
+            <Spin spinning={state.waitingAgree} delay={200}
+                  tip={ <Progress percent={state.waitingAgreePercent}
+                                  strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
+                                  type={'dashboard'}
+                                  format={((percent) => {
+                      return '等待同意...'
+                  })}/> }
+            >
+                <MainContains myBoard={state.myBoard}
+                              gameInfo={state.gameInfo}
+                              handleLocalPlay={(idx, idy) => handleLocalPlay(idx, idy, false)}
 
-                          inGame = {state.inGame}
-                          userList={state.userList}
-                          handelRequestFight={(targetUser) => sendRequestFight(user.userName, targetUser, null)}/>
-            {contextHolder}
+                              inGame={state.inGame}
+                              userList={state.userList}
+                              currUser={user.userName}
+                              handelRequestFight={(targetUser) => sendRequestFight(user.userName, targetUser, null)}/>
+                {contextHolder}
+            </Spin>
         </>
     )
 
@@ -192,9 +216,25 @@ export default function ClientComponent() {
             targetUser: targetUser
         }
 
-        updateState(draft => {
-            draft.waitingAgree = true;
-        })
+        if (ifTargetAgree === null) {
+            updateState(draft => {
+                draft.waitingAgree = true;
+            })
+
+            const time = setInterval(() => {
+                updateState(draft => {
+                    draft.waitingAgreePercent = draft.waitingAgreePercent - 2
+                })
+            }, 100)
+
+            setTimeout(() => {
+                clearInterval(time)
+                updateState(draft => {
+                    draft.waitingAgree = false;
+                    draft.waitingAgreePercent = 100;
+                })
+            }, 6000)
+        }
 
         currentUserContext.socket.send(JSON.stringify(fightRequestMessage))
     }
@@ -215,7 +255,7 @@ export default function ClientComponent() {
 
         currentUserContext.user = user.userName
         updateState(draft => {
-            draft.isModalOpen = false;
+            draft.isUserModalOpen = false;
         })
         initCollection()
     }
@@ -225,48 +265,63 @@ export default function ClientComponent() {
     }
 
     function showConfirm(messageBody) {
-        modal.confirm({
+        let timeout = 6;
+        let timeWait = true;
+        const instance = modal.confirm({
             duration: 5,
             okText: "接收",
-            cancelText: "接受",
+            cancelText: "拒绝",
             title: '五子棋对战邀请',
             icon: <ExclamationCircleFilled />,
-            content: '来自' + messageBody.sourceUser,
+            content: '来自' + messageBody.sourceUser + ' ( ' + timeout + ' 秒后自动拒绝)',
             onOk() {
-                updateState(draft => {
-                    draft.myBoard = 1;
-                    draft.inGame = true;
-                })
+                clearBoard(1, true)
                 currentUserContext.targetUser = messageBody.sourceUser;
                 sendRequestFight(user.userName, messageBody.sourceUser, true);
+                timeWait = false
             },
             onCancel() {
+                timeWait = false;
                 sendRequestFight(user.userName, messageBody.sourceUser, false);
             },
         });
+
+
+        const timer = setInterval(() => {
+            timeout = timeout - 1;
+            instance.update({
+                content: '来自' + messageBody.sourceUser + ' ( ' + timeout + ' 秒后自动拒绝)',
+            });
+        }, 1000)
+
+        setTimeout(() => {
+            clearInterval(timer);
+            instance.destroy();
+            if (timeWait) {
+                sendRequestFight(user.userName, messageBody.sourceUser, false);
+            }
+        }, 5500)
     }
 
-    function calculateWinner(checkIdx, checkIdy) {
-        console.log(state.gameInfo.nextBoard)
-        console.log(checkIdx, checkIdy)
+    function calculateWinner(checkIdx, checkIdy, targetPlayBoard) {
         let columnCount = 0;
         // 列计数
         for (let i = checkIdy + 1; i < boardLength; i++) {
-            if (state.gameInfo.chessBoard[checkIdx][i] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[checkIdx][i] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
             }
         }
         for (let i = checkIdy - 1; i >= 0; i--) {
-            if (state.gameInfo.chessBoard[checkIdx][i] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[checkIdx][i] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(state.gameInfo.nextBoard === 1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
             return true;
         } else {
             columnCount = 0
@@ -274,21 +329,21 @@ export default function ClientComponent() {
 
         //行计数
         for (let i = checkIdx + 1; i < boardLength; i++) {
-            if (state.gameInfo.chessBoard[i][checkIdy] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[i][checkIdy] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
             }
         }
         for (let i = checkIdx - 1; i >= 0; i--) {
-            if (state.gameInfo.chessBoard[i][checkIdy] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[i][checkIdy] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(state.gameInfo.nextBoard === 1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
             return true;
         } else {
             columnCount = 0
@@ -297,7 +352,7 @@ export default function ClientComponent() {
         //斜行计数-左斜 \
         // 向左上下棋↖
         for (let i = checkIdx - 1, j = checkIdy - 1; i >= 0 && j >= 0; i--, j--) {
-            if (state.gameInfo.chessBoard[i][j] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[i][j] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
@@ -305,14 +360,14 @@ export default function ClientComponent() {
         }
         // 向左下下棋↘
         for (let i = checkIdx + 1, j = checkIdy + 1; i < boardLength && j < boardLength; i++, j++) {
-            if (state.gameInfo.chessBoard[i][j] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[i][j] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(state.gameInfo.nextBoard === 1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
             return true;
         } else {
             columnCount = 0
@@ -320,7 +375,7 @@ export default function ClientComponent() {
         //斜行计数-右斜 /
         // 向右上下棋↗
         for (let i = checkIdx + 1, j = checkIdy - 1; i < boardLength && j >= 0; i++, j--) {
-            if (state.gameInfo.chessBoard[i][j] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[i][j] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
@@ -328,14 +383,14 @@ export default function ClientComponent() {
         }
         // 向左下下棋↙
         for (let i = checkIdx - 1, j = checkIdy + 1; i >= 0 && j < boardLength; i--, j++) {
-            if (state.gameInfo.chessBoard[i][j] === state.gameInfo.nextBoard) {
+            if (state.gameInfo.chessBoard[i][j] === targetPlayBoard) {
                 columnCount++;
             } else {
                 break;
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(state.gameInfo.nextBoard === 1 ? '黑棋胜' : '白棋胜')
+            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
             return true;
         }
         return false
