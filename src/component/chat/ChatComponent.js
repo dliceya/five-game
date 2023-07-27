@@ -4,12 +4,12 @@ import './ChatComponent.css'
 import {List, Avatar, Button, Tooltip} from "antd";
 import {qqUtil} from "../../utils/utils";
 
-export default function ChatComponent({currUser, inGame, userList, handelRequestFight}) {
+export default function ChatComponent({currUser, inGame, userList, handelRequestFight, initGame, initRobot}) {
 
     return (
         <div className='main-chat'>
-            <Button>人机对战</Button>
-            <Button>自己下</Button>
+            <Button onClick={() => initRobot()}>人机对战</Button>
+            <Button onClick={() => initGame(0, true)}>自己下</Button>
             <List
                 bordered={true}
                 dataSource={userList}

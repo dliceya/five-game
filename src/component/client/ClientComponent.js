@@ -7,7 +7,6 @@ import {messageUtil} from "../../utils/utils";
 import {useImmer} from "use-immer";
 
 import {createContext} from "react";
-import {produce} from "immer";
 export const currentUserContext = createContext({
     socket : undefined,
     user: '',
@@ -43,6 +42,7 @@ export default function ClientComponent() {
         }
     })
     function handleLocalPlay(checkIdx, checkIdy, isTargetPlay) {
+        console.log(checkIdx, checkIdy)
 
         if (!isTargetPlay) {
             let alert = 3;
@@ -52,41 +52,58 @@ export default function ClientComponent() {
             }
         }
 
-        if (state.gameInfo.chessBoard[checkIdx][checkIdy]) {
+        if (state.gameInfo.chessBoard[Math.abs(checkIdx)][checkIdy]) {
             return
         }
 
-        let targetPlayBoard;
-        console.log(state.gameInfo.test)
         updateState(draft => {
-            draft.gameInfo.chessBoard[checkIdx][checkIdy] = draft.gameInfo.nextBoard;
+            draft.gameInfo.chessBoard[Math.abs(checkIdx)][checkIdy] = draft.gameInfo.nextBoard;
             draft.gameInfo.nextBoard = -draft.gameInfo.nextBoard;
             draft.gameInfo.squares = [...draft.gameInfo.squares, {idx: checkIdx, idy: checkIdy}];
             draft.gameInfo.test = draft.gameInfo.test + 1;
             draft.gameInfo.preCheckIdx = checkIdx;
             draft.gameInfo.preCheckIdy = checkIdy;
-            targetPlayBoard = draft.gameInfo.nextBoard;
-            console.log(draft.gameInfo.nextBoard)
         })
 
-
-        if (calculateWinner(checkIdx, checkIdy, targetPlayBoard)) {
+        let winnerPlayBoard;
+        if (checkIdx < 0) {
+            winnerPlayBoard = -state.myBoard;
+        } else {
+            winnerPlayBoard = calculateWinner(checkIdx, checkIdy, state.gameInfo.nextBoard)
+        }
+        if (winnerPlayBoard !== 0) {
+            messageUtil.success(winnerPlayBoard === 1 ? '黑棋胜' : '白棋胜')
+            checkIdx = -checkIdx;
             clearBoard(-state.myBoard, true);
         }
 
-        if (!isTargetPlay) {
+        if (Math.abs(state.myBoard) === 1 && !isTargetPlay) {
             const playInfo = {
                 messageType: 'BattleMessage',
                 idx: checkIdx,
                 idy: checkIdy,
                 sourceUser: currentUserContext.user,
-                targetUser: currentUserContext.targetUser
+                targetUser: currentUserContext.targetUser,
+                chessBoard: state.gameInfo.chessBoard
             }
             currentUserContext.socket.send(JSON.stringify(playInfo))
         }
     }
 
-    function clearBoard(myBoard = 0, inGame = false){
+    function initRobot() {
+        currentUserContext.targetUser = 'Robot';
+        updateState(draft => {
+            draft.myBoard = -1;
+            draft.inGame = true;
+            draft.gameInfo.chessBoard[7][7] = 1;
+            draft.gameInfo.nextBoard = -1;
+            draft.gameInfo.squares = [...draft.gameInfo.squares, {idx: 7, idy: 7}];
+            draft.gameInfo.preCheckIdx = 7;
+            draft.gameInfo.preCheckIdy = 7;
+        })
+    }
+
+    function clearBoard(myBoard, inGame){
         updateState(draft => {
             draft.myBoard = myBoard;
             draft.inGame = inGame;
@@ -95,6 +112,7 @@ export default function ClientComponent() {
                 idx: null,
                 idy: null,
             }];
+            draft.gameInfo.nextBoard = 1;
             draft.gameInfo.test = 1;
             draft.gameInfo.preCheckIdx = -1;
             draft.gameInfo.preCheckIdy = -1;
@@ -201,7 +219,10 @@ export default function ClientComponent() {
                               inGame={state.inGame}
                               userList={state.userList}
                               currUser={user.userName}
-                              handelRequestFight={(targetUser) => sendRequestFight(user.userName, targetUser, null)}/>
+                              handelRequestFight={(targetUser) => sendRequestFight(user.userName, targetUser, null)}
+                              initGame={(myBoard, inGame) => clearBoard(myBoard, inGame)}
+                              initRobot={() => initRobot()}
+                />
                 {contextHolder}
             </Spin>
         </>
@@ -321,8 +342,7 @@ export default function ClientComponent() {
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
-            return true;
+            return targetPlayBoard;
         } else {
             columnCount = 0
         }
@@ -343,8 +363,7 @@ export default function ClientComponent() {
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
-            return true;
+            return targetPlayBoard;
         } else {
             columnCount = 0
         }
@@ -367,8 +386,7 @@ export default function ClientComponent() {
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
-            return true;
+            return targetPlayBoard;
         } else {
             columnCount = 0
         }
@@ -390,10 +408,9 @@ export default function ClientComponent() {
             }
         }
         if (columnCount >= 4) {
-            messageUtil.success(targetPlayBoard === 1 ? '黑棋胜' : '白棋胜')
-            return true;
+            return targetPlayBoard;
         }
-        return false
+        return 0;
     }
 
 }
